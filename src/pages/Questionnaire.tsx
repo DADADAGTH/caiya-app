@@ -27,9 +27,13 @@ export const Questionnaire: React.FC = () => {
     if (!val && val !== 0) return; // Validate
 
     if (isLast) {
-      completeOnboarding({ ...answers, [question.id]: val }).then(() => {
-        navigate('/dashboard');
-      });
+      console.log('Submitting onboarding...');
+      // Fire and forget - don't wait for the promise to resolve
+      completeOnboarding({ ...answers, [question.id]: val }).catch(console.error);
+      
+      // Navigate immediately
+      console.log('Navigating to dashboard immediately');
+      navigate('/dashboard');
     } else {
       setCurrentIdx(prev => prev + 1);
       setShowExplanation(false);
@@ -96,6 +100,15 @@ export const Questionnaire: React.FC = () => {
               {answers[question.id] === opt.value && <CheckCircle size={20} />}
             </button>
           ))}
+          
+          {question.type === 'single' && isLast && (
+              <button
+                onClick={() => handleNext()}
+                className="mt-6 w-full btn btn-primary py-3"
+              >
+                完成 <ArrowRight size={18} className="ml-2" />
+              </button>
+          )}
 
           {question.type === 'number' && (
             <div className="mt-4">
@@ -110,7 +123,7 @@ export const Questionnaire: React.FC = () => {
                 onClick={() => handleNext()}
                 className="mt-6 w-full btn btn-primary py-3"
               >
-                下一步 <ArrowRight size={18} className="ml-2" />
+                {isLast ? '完成' : '下一步'} <ArrowRight size={18} className="ml-2" />
               </button>
             </div>
           )}

@@ -1,15 +1,18 @@
-export type WealthBucket = 'emergency' | 'daily' | 'growth' | 'investment';
+export type WealthBucket = 'emergency' | 'daily' | 'investment' | 'growth';
 
 export interface WealthGrid {
-  emergency: number; // 15-20%
-  daily: number;     // 10-15%
-  investment: number; // 50-65% (growth/investment combined in prompt as '增值金', prompt uses 'growth' for '成长金' which is different)
-  // Prompt definitions:
-  // 备用金 (Emergency) 15-20%
-  // 日常开销 (Daily) 10-15%
-  // 增值金 (Investment/ValueAdd) 50-65%
-  // 成长金 (Growth/Self) 10-20%
-  growth: number; 
+  // Target percentages (0-100)
+  emergency: number;
+  daily: number;
+  investment: number;
+  growth: number;
+  // Actual amounts (optional, calculated from ledger)
+  actual?: {
+      emergency: number;
+      daily: number;
+      investment: number;
+      growth: number;
+  };
 }
 
 export interface UserProfile {
@@ -55,4 +58,6 @@ export interface KnowledgeCard {
   concept: string; // Economic concept
   action?: string; // Actionable advice
   tags: string[];
+  isAiGenerated?: boolean; // New flag
+  date?: string; // Generated date
 }

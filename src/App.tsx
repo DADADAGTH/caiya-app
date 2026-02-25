@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Onboarding } from './pages/Onboarding';
 import { Auth } from './pages/Auth';
@@ -7,95 +7,65 @@ import { Questionnaire } from './pages/Questionnaire';
 import { Dashboard } from './pages/Dashboard';
 import { DailyLedger } from './pages/DailyLedger';
 import { Knowledge } from './pages/Knowledge';
-import { useStore } from './store/useStore';
+import { AIChat } from './pages/AIChat';
 import { supabase } from './lib/supabase';
+import { useStore } from './store/useStore';
+import { Profile } from './pages/Profile';
 import { Loader2 } from 'lucide-react';
 
 function App() {
-  const { user, fetchProfile, fetchLedger, loading } = useStore();
-  const [init, setInit] = useState(true);
-
+  const { user, fetchProfile, loading } = useStore();
+  
   useEffect(() => {
-    let mounted = true;
-    
-    // Only use the auth state listener to handle initialization and updates
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.email);
-      if (!mounted) return;
-      
-      if (session) {
-        // Only fetch if we don't have user data yet or if session changed
-        const currentUser = useStore.getState().user;
-        if (!currentUser) {
-           console.log('Fetching user profile...');
-           try {
-             await fetchProfile();
-             await fetchLedger();
-           } catch (err) {
-             console.error('Failed to fetch user data:', err);
-             // Consider clearing session if data fetch fails repeatedly
-           }
+    // Initial fetch
+    fetchProfile();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        // Force loading state when signing in
+        if (event === 'SIGNED_IN') {
+             useStore.setState({ loading: true });
         }
-      } else {
-        console.log('No session, clearing user state');
+        fetchProfile();
+      } else if (event === 'SIGNED_OUT') {
         useStore.setState({ user: null, ledger: [] });
       }
-      if (mounted) setInit(false);
     });
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []); // Remove dependencies to run only once
+    return () => subscription.unsubscribe();
+  }, []);
 
-  if (init) {
+  if (loading) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <Loader2 className="animate-spin text-primary" size={32} />
-        </div>
+          <div className="min-h-screen flex items-center justify-center bg-gray-50">
+              <div className="flex flex-col items-center gap-4 text-black">
+                  <Loader2 size={48} className="animate-spin text-primary" />
+                  <p className="font-bold">加载中...</p>
+              </div>
+          </div>
       );
-    }
+  }
 
   return (
-    <BrowserRouter>
+    <Router>
       <Layout>
         <Routes>
           <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Onboarding />} />
           <Route path="/auth" element={user ? <Navigate to="/dashboard" /> : <Auth />} />
-          
           <Route path="/questionnaire" element={
-            !user ? <Navigate to="/auth" /> : 
-            user.isOnboarded ? <Navigate to="/dashboard" /> : 
-            <Questionnaire />
+            user?.isOnboarded ? <Navigate to="/dashboard" /> : (user ? <Questionnaire /> : <Navigate to="/auth" />)
           } />
           
-          <Route path="/dashboard" element={
-            !user ? <Navigate to="/auth" /> : 
-            !user.isOnboarded ? <Navigate to="/questionnaire" /> :
-            <Dashboard />
-          } />
-          
+          <Route path="/dashboard" element={user ? (user.isOnboarded ? <Dashboard /> : <Navigate to="/questionnaire" />) : <Navigate to="/auth" />} />
           <Route path="/ledger" element={user ? <DailyLedger /> : <Navigate to="/auth" />} />
+          <Route path="/chat" element={user ? <AIChat /> : <Navigate to="/auth" />} />
           <Route path="/knowledge" element={user ? <Knowledge /> : <Navigate to="/auth" />} />
-          <Route path="/profile" element={
-            user ? (
-              <div className="p-6 text-center">
-                <h2 className="text-xl font-bold mb-4">个人中心</h2>
-                <p className="mb-6 text-gray-500">当前账号: {user.name}</p>
-                <button 
-                  onClick={() => supabase.auth.signOut()}
-                  className="btn btn-outline w-full text-red-500 border-red-200 hover:bg-red-50"
-                >
-                  退出登录
-                </button>
-              </div>
-            ) : <Navigate to="/auth" />
-          } />
+          <Route path="/profile" element={user ? <Profile /> : <Navigate to="/auth" />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Layout>
-    </BrowserRouter>
+    </Router>
   );
 }
 

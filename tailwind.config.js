@@ -8,12 +8,15 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#10B981', // Emerald 500
-          foreground: '#FFFFFF',
+          DEFAULT: '#FBE703', // Lemon Yellow (Young & Energetic)
+          foreground: '#000000', // Black text on yellow for high contrast
         },
         secondary: {
-          DEFAULT: '#F59E0B', // Amber 500
+          DEFAULT: '#000000', // Black for bold contrast
           foreground: '#FFFFFF',
+        },
+        brand: {
+            green: '#22C55E', // Fresh Sprout Green
         },
         destructive: {
           DEFAULT: '#EF4444', // Red 500
@@ -24,8 +27,8 @@ export default {
           foreground: '#6B7280', // Gray 500
         },
         accent: {
-          DEFAULT: '#ECFDF5', // Emerald 50
-          foreground: '#047857', // Emerald 700
+          DEFAULT: '#FEFCE8', // Yellow 50
+          foreground: '#854D0E', // Yellow 800
         },
       },
     },
