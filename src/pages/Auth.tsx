@@ -129,6 +129,7 @@ export const Auth: React.FC = () => {
              // The App.tsx auth listener might pick it up later or we just use local state
              useStore.setState({ 
                  user: { 
+                     id: data.user?.id || 'temp',
                      name: data.user?.email?.split('@')[0] || 'User',
                      financialScore: 0,
                      riskTolerance: 'balanced',

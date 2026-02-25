@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
-import { LedgerEntry, UserProfile, WealthGrid, KnowledgeCard } from '../types';
+import { LedgerEntry, UserProfile, WealthGrid, KnowledgeCard, WealthBucket } from '../types';
 
 interface AppState {
   user: UserProfile | null;
@@ -41,7 +41,7 @@ const calculateWealthGrid = (answers: Record<string, any>): WealthGrid => {
   return grid;
 };
 
-export const useStore = create<Store>((set, get) => ({
+export const useStore = create<AppState>((set, get) => ({
   user: null,
   ledger: [],
   loading: true, 
@@ -339,7 +339,7 @@ export const useStore = create<Store>((set, get) => ({
             initialLedger = buckets.map(b => ({
                 id: crypto.randomUUID(),
                 user_id: currentUser?.id || 'temp', 
-                type: 'income',
+                type: 'income' as const,
                 amount: Number(((liquidAssets * b.percent) / 100).toFixed(2)),
                 bucket: b.id,
                 category: '初始资产',

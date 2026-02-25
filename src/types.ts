@@ -16,6 +16,7 @@ export interface WealthGrid {
 }
 
 export interface UserProfile {
+  id: string;
   name: string;
   avatar?: string;
   financialScore: number;
@@ -47,7 +48,7 @@ export interface Question {
   text: string;
   type: 'single' | 'number' | 'multi';
   options?: QuestionOption[];
-  category: 'economic_base' | 'financial_literacy' | 'psychology';
+  category: 'economic_base' | 'financial_literacy' | 'psychology' | 'risk_profile';
   explanation?: string; // Economic principle explanation
 }
 

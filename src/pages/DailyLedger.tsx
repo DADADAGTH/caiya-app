@@ -130,7 +130,7 @@ export const DailyLedger: React.FC = () => {
               title: aiSuggestion.title,
               concept: '专属建议',
               content: aiSuggestion.content,
-              tags: ['AI分析', bucket === 'expense' ? '支出' : '收入'],
+              tags: ['AI分析', type === 'expense' ? '支出' : '收入'],
               isAiGenerated: true,
               date: new Date().toISOString()
           });
