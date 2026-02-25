@@ -163,22 +163,65 @@ export const Auth: React.FC = () => {
         // Get current URL but ensure it's not the auth page itself if possible, or just root
         const redirectTo = window.location.origin;
 
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-              emailRedirectTo: redirectTo
-          }
-        });
+        // Try standard signUp first
+        let signUpData: any = null;
+        let signUpError: any = null;
+
+        try {
+            const { data, error } = await supabase.auth.signUp({
+              email,
+              password,
+              options: {
+                  emailRedirectTo: redirectTo
+              }
+            });
+            signUpData = data;
+            signUpError = error;
+        } catch (err: any) {
+            console.warn('[Auth] Standard signUp failed:', err);
+            // Check if it is a fetch error
+            if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
+                 console.log('[Auth] Trying REST fallback...');
+                 try {
+                     const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/signup`, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            email,
+                            password,
+                            data: {},
+                            gotrue_meta_security: {}
+                        })
+                    });
+                    
+                    const json = await res.json();
+                    if (!res.ok) {
+                        signUpError = new Error(json.msg || json.error_description || 'Signup failed');
+                    } else {
+                        signUpData = json;
+                        signUpError = null;
+                    }
+                } catch (restErr) {
+                    console.error('[Auth] REST fallback also failed:', restErr);
+                    signUpError = restErr;
+                }
+            } else {
+                // For other errors, we still treat them as errors
+                signUpError = err;
+            }
+        }
 
         if (!isActive) return;
 
-        if (error) {
-            console.error('[Auth] Supabase signUp error:', error);
-            throw error;
+        if (signUpError) {
+            console.error('[Auth] Supabase signUp error:', signUpError);
+            throw signUpError;
         }
         
-        console.log('[Auth] SignUp successful', data);
+        console.log('[Auth] SignUp successful', signUpData);
         clearTimeout(timeoutId);
         isActive = false;
         
